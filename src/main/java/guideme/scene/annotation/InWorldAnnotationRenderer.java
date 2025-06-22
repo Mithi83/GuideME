@@ -16,10 +16,12 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.util.ARGB;
+import net.neoforged.neoforge.client.RenderTypeHelper;
 import org.joml.Vector3f;
 
 public final class InWorldAnnotationRenderer {
@@ -90,7 +92,8 @@ public final class InWorldAnnotationRenderer {
                         Minecraft.getInstance().getMainRenderTarget().getDepthTexture(), 1.0);
             }
 
-            var consumer = buffers.getBuffer(RenderType.translucent());
+            var renderType = RenderTypeHelper.getEntityRenderType(ChunkSectionLayer.TRANSLUCENT);
+            var consumer = buffers.getBuffer(renderType);
 
             for (var annotation : annotations) {
                 if (annotation.isAlwaysOnTop() != (pass == 2)) {
@@ -124,7 +127,7 @@ public final class InWorldAnnotationRenderer {
                 }
             }
 
-            buffers.endBatch(RenderType.translucent());
+            buffers.endBatch(renderType);
         }
         buffers.endBatch();
     }

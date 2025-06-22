@@ -34,8 +34,11 @@ import guideme.ui.GuideUiHost;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
+
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.PerspectiveProjectionMatrixBuffer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
@@ -302,11 +305,11 @@ public class LytGuidebookScene extends LytBox {
             var window = Minecraft.getInstance().getWindow();
 
             // transform our document viewport into physical screen coordinates
-            var viewport = bounds.transform(context.poseStack().last().pose());
+            var viewport = bounds.transform(context.poseStack());
             var textureWidth = (int) (viewport.width() * window.getGuiScale());
             var textureHeight = (int) (viewport.height() * window.getGuiScale());
             context.pushScissor(bounds); // We'll actually sacrifice this
-            RenderSystem.disableScissor();
+            RenderSystem.disableScissorForRenderTypeDraws();
 
             boolean withStencil = Minecraft.getInstance().getMainRenderTarget().useStencil;
             var renderTarget = new TextureTarget("GuideScene RTT", textureWidth, textureHeight, true, withStencil);
@@ -371,14 +374,17 @@ public class LytGuidebookScene extends LytBox {
             }
 
             RenderSystem.backupProjectionMatrix();
-            RenderSystem.setProjectionMatrix(scene.getCameraSettings().getProjectionMatrix(),
-                    ProjectionType.ORTHOGRAPHIC);
+            try (var buffer = new PerspectiveProjectionMatrixBuffer("debug crosshair projection")) {
+                RenderSystem.setProjectionMatrix(buffer.getBuffer(scene.getCameraSettings().getProjectionMatrix()),
+                        ProjectionType.ORTHOGRAPHIC);
+            }
             var modelViewStack = RenderSystem.getModelViewStack();
             modelViewStack.pushMatrix();
             modelViewStack.identity();
             modelViewStack.mul(scene.getCameraSettings().getViewMatrix());
 
-            Minecraft.getInstance().gui.getDebugOverlay().render3dCrosshair();
+            var camera = new Camera();
+            Minecraft.getInstance().gui.getDebugOverlay().render3dCrosshair(camera);
             modelViewStack.popMatrix();
             RenderSystem.restoreProjectionMatrix();
         }

@@ -6,6 +6,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 public class GuideScrollbar extends AbstractWidget {
@@ -43,22 +44,23 @@ public class GuideScrollbar extends AbstractWidget {
         int top = getY() + getThumbTop();
         int bottom = top + thumbHeight;
 
-        var pose = guiGraphics.pose().last().pose();
-        var min = new Vector3f();
-        pose.transformPosition(left, top, 0, min);
-        var max = new Vector3f();
-        pose.transformPosition(right, bottom, 0, max);
+        var pose = guiGraphics.pose();
+        var min = new Vector2f();
+        pose.transformPosition(left, top,  min);
+        var max = new Vector2f();
+        pose.transformPosition(right, bottom, max);
 
-        var buffer = guiGraphics.bufferSource.getBuffer(RenderType.gui());
-        buffer.addVertex(min.x, max.y, 0.0f).setColor(128, 128, 128, 255);
-        buffer.addVertex(max.x, max.y, 0.0f).setColor(128, 128, 128, 255);
-        buffer.addVertex(max.x, min.y, 0.0f).setColor(128, 128, 128, 255);
-        buffer.addVertex(min.x, min.y, 0.0f).setColor(128, 128, 128, 255);
-        buffer.addVertex(min.x, max.y - 1, 0.0f).setColor(192, 192, 192, 255);
-        buffer.addVertex(max.x - 1, max.y - 1, 0.0f).setColor(192, 192, 192, 255);
-        buffer.addVertex(max.x - 1, min.y, 0.0f).setColor(192, 192, 192, 255);
-        buffer.addVertex(min.x, min.y, 0.0f).setColor(192, 192, 192, 255);
-        guiGraphics.bufferSource.endBatch(RenderType.gui());
+        // TODO: Custom rui gender state? or colored rectangle?
+        // TODO 1.21.6 var buffer = guiGraphics.bufferSource.getBuffer(RenderType.gui());
+        // TODO 1.21.6 buffer.addVertex(min.x, max.y, 0.0f).setColor(128, 128, 128, 255);
+        // TODO 1.21.6 buffer.addVertex(max.x, max.y, 0.0f).setColor(128, 128, 128, 255);
+        // TODO 1.21.6 buffer.addVertex(max.x, min.y, 0.0f).setColor(128, 128, 128, 255);
+        // TODO 1.21.6 buffer.addVertex(min.x, min.y, 0.0f).setColor(128, 128, 128, 255);
+        // TODO 1.21.6 buffer.addVertex(min.x, max.y - 1, 0.0f).setColor(192, 192, 192, 255);
+        // TODO 1.21.6 buffer.addVertex(max.x - 1, max.y - 1, 0.0f).setColor(192, 192, 192, 255);
+        // TODO 1.21.6 buffer.addVertex(max.x - 1, min.y, 0.0f).setColor(192, 192, 192, 255);
+        // TODO 1.21.6 buffer.addVertex(min.x, min.y, 0.0f).setColor(192, 192, 192, 255);
+        // TODO 1.21.6 guiGraphics.bufferSource.endBatch(RenderType.gui());
     }
 
     /**

@@ -64,7 +64,7 @@ public class LytWidget extends LytBlock implements InteractiveElement {
         GuiGraphics guiGraphics = context.guiGraphics();
         if (minecraft.screen instanceof IndepentScaleScreen indepentScaleScreen) {
             guiGraphics = new ScaledGuiGraphics(minecraft, context.guiGraphics().pose(),
-                    context.guiGraphics().bufferSource, (float) indepentScaleScreen.getEffectiveScale());
+                    context.guiGraphics().guiRenderState, (float) indepentScaleScreen.getEffectiveScale());
         }
         widget.render(
                 guiGraphics,

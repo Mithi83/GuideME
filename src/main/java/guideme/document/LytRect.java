@@ -1,6 +1,8 @@
 package guideme.document;
 
+import org.joml.Matrix3x2fc;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
@@ -112,14 +114,14 @@ public record LytRect(int x, int y, int width, int height) {
         return new LytRect(x, y, width, height);
     }
 
-    public LytRect transform(Matrix4f pose) {
-        var tmp = new Vector3f();
-        pose.transformPosition(x, y, 0, tmp);
+    public LytRect transform(Matrix3x2fc pose) {
+        var tmp = new Vector2f();
+        pose.transformPosition(x, y, tmp);
 
         var left = tmp.x;
         var top = tmp.y;
 
-        pose.transformPosition(x + width, y + height, 0, tmp);
+        pose.transformPosition(x + width, y + height, tmp);
 
         var width = Math.ceil(tmp.x - left);
         var height = Math.ceil(tmp.y - top);

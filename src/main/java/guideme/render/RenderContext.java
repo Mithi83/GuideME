@@ -23,6 +23,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.Vec2;
 import net.neoforged.neoforge.fluids.FluidStack;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fStack;
+import org.joml.Matrix3x2fc;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -36,7 +39,7 @@ public interface RenderContext {
 
     GuiGraphics guiGraphics();
 
-    default PoseStack poseStack() {
+    default Matrix3x2fStack poseStack() {
         return guiGraphics().pose();
     }
 
@@ -169,19 +172,20 @@ public interface RenderContext {
                 .withStrikethrough(style.strikethrough())
                 .withFont(style.font());
 
-        var matrix = poseStack().last().pose();
+        Matrix3x2fc matrix = poseStack();
         if (style.fontScale() != 1) {
-            matrix = new Matrix4f(matrix);
+            Matrix3x2f scaledMatrix = new Matrix3x2f(poseStack());
 
-            matrix.scale(style.fontScale(), style.fontScale(), 1);
-            matrix.translate(new Vector3f(x / style.fontScale(), y / style.fontScale(), 0));
+            scaledMatrix.scale(style.fontScale(), style.fontScale());
+            scaledMatrix.translate(x / style.fontScale(), y / style.fontScale());
+            matrix = scaledMatrix;
             x = 0;
             y = 0;
         }
 
-        font().drawInBatch(Component.literal(text).withStyle(effectiveStyle), x, y, resolveColor(style.color()),
-                style.dropShadow(),
-                matrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+       // TODO 1.21.6 font().drawInBatch(Component.literal(text).withStyle(effectiveStyle), x, y, resolveColor(style.color()),
+       // TODO 1.21.6         style.dropShadow(),
+       // TODO 1.21.6         matrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
     }
 
     default void fillRect(int x, int y, int width, int height, ColorValue color) {

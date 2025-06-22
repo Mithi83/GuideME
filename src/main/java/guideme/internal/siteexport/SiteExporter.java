@@ -35,9 +35,19 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.DetectedVersion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.render.GuiRenderer;
+import net.minecraft.client.gui.render.pip.GuiBannerResultRenderer;
+import net.minecraft.client.gui.render.pip.GuiBookModelRenderer;
+import net.minecraft.client.gui.render.pip.GuiEntityRenderer;
+import net.minecraft.client.gui.render.pip.GuiProfilerChartRenderer;
+import net.minecraft.client.gui.render.pip.GuiSignRenderer;
+import net.minecraft.client.gui.render.pip.GuiSkinRenderer;
+import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.gui.screens.LoadingOverlay;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -431,7 +441,7 @@ public class SiteExporter implements ResourceExporter {
         var modVersion = getModVersion();
         var guideMeVersion = getGuideMeVersion();
         var generated = Instant.now().toEpochMilli();
-        var gameVersion = DetectedVersion.tryDetectVersion().getName();
+        var gameVersion = DetectedVersion.tryDetectVersion().name();
 
         // This file is not accessed via the CDN and thus doesn't need a cache-busting name
         try (var writer = Files.newBufferedWriter(outputFolder.resolve("index.json"), StandardCharsets.UTF_8)) {
@@ -477,8 +487,7 @@ public class SiteExporter implements ResourceExporter {
         }
 
         try (var renderer = new OffScreenRenderer(ICON_DIMENSION, ICON_DIMENSION)) {
-            var guiGraphics = new GuiGraphics(client, client.renderBuffers().bufferSource());
-
+            var guiGraphics = new GuiGraphics(client, client.gameRenderer.guiRenderState);
             renderer.setupItemRendering();
 
             LOG.info("Exporting items...");
@@ -501,8 +510,10 @@ public class SiteExporter implements ResourceExporter {
                 var sprites = guessSprites(quadLists);
 
                 var iconPath = renderAndWrite(renderer, baseName, () -> {
+                    client.gameRenderer.guiRenderState.reset();
                     guiGraphics.renderItem(stack, 0, 0);
                     guiGraphics.renderItemDecorations(client.font, stack, 0, 0, "");
+                    client.gameRenderer.guiRenderer.render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
                 }, sprites, true);
 
                 String absIconUrl = "/" + outputFolder.relativize(iconPath).toString().replace('\\', '/');
@@ -532,7 +543,7 @@ public class SiteExporter implements ResourceExporter {
         }
 
         try (var renderer = new OffScreenRenderer(ICON_DIMENSION, ICON_DIMENSION)) {
-            var guiGraphics = new GuiGraphics(client, client.renderBuffers().bufferSource());
+            var guiGraphics = new GuiGraphics(client, client.gameRenderer.guiRenderState);
 
             renderer.setupItemRendering();
 
@@ -554,7 +565,9 @@ public class SiteExporter implements ResourceExporter {
                         baseName,
                         () -> {
                             if (sprite != null) {
-                                guiGraphics.blitSprite(RenderType::guiTextured, sprite, 0, 0, 16, 16, color);
+                                client.gameRenderer.guiRenderState.reset();
+                                guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, 0, 0, 16, 16, color);
+                                client.gameRenderer.guiRenderer.render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
                             }
                         },
                         sprite != null ? Set.of(sprite) : Set.of(),

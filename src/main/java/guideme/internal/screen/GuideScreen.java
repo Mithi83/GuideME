@@ -201,7 +201,7 @@ public class GuideScreen extends DocumentScreen implements GuideUiHost {
     @Override
     public void scaledRender(GuiGraphics guiGraphics, RenderContext context, int mouseX, int mouseY,
             float partialTick) {
-        renderBlurredBackground();
+        renderBlurredBackground(guiGraphics);
 
         context.fillIcon(screenRect, GuiAssets.GUIDE_BACKGROUND, SymbolicColor.GUIDE_SCREEN_BACKGROUND);
 
@@ -210,9 +210,7 @@ public class GuideScreen extends DocumentScreen implements GuideUiHost {
 
         renderDocument(context);
 
-        var poseStack = guiGraphics.pose();
-        poseStack.pushPose();
-        poseStack.translate(0, 0, 200);
+        guiGraphics.nextStratum();
 
         renderTitle(documentRect, context);
 
@@ -221,8 +219,6 @@ public class GuideScreen extends DocumentScreen implements GuideUiHost {
         }
 
         super.scaledRender(guiGraphics, context, mouseX, mouseY, partialTick);
-
-        poseStack.popPose();
 
         renderDocumentTooltip(guiGraphics, mouseX, mouseY, partialTick);
     }

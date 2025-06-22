@@ -208,8 +208,8 @@ public class GuideNavBar extends AbstractWidget {
             graphics.enableScissor(getX(), getY(), getX() + width, getY() + height);
 
             var pose = graphics.pose();
-            pose.pushPose();
-            pose.translate(getX(), getY() - scrollOffset, 0);
+            pose.pushMatrix();
+            pose.translate(getX(), getY() - scrollOffset);
 
             var viewport = renderContext.viewport();
 
@@ -264,7 +264,7 @@ public class GuideNavBar extends AbstractWidget {
                 }
             }
 
-            pose.popPose();
+            pose.popMatrix();
 
             graphics.disableScissor();
         }

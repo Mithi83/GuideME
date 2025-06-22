@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.metadata.gui.GuiSpriteScaling;
 import net.minecraft.resources.ResourceLocation;
+import org.joml.Matrix3x2fStack;
 
 /**
  * Helper to build and draw a layer of sprites in a single draw-call.
@@ -192,7 +193,7 @@ final class SpriteLayer {
         builder.addVertex(x + width, y, z).setUv(maxU, minV).setColor(color);
     }
 
-    public void render(PoseStack poseStack, int x, int y, int z) {
+    public void render(Matrix3x2fStack poseStack, int x, int y, int z) {
         if (builder == null) {
             throw new IllegalStateException("Already rendered.");
         }
@@ -203,12 +204,12 @@ final class SpriteLayer {
                 return;
             }
 
-            var modelViewStack = RenderSystem.getModelViewStack();
-            modelViewStack.pushMatrix();
-            modelViewStack.mul(poseStack.last().pose());
-            modelViewStack.translate(x, y, z);
-            RenderType.guiTextured(atlasLocation).draw(meshData);
-            modelViewStack.popMatrix();
+            // TODO 1.21.6 var modelViewStack = RenderSystem.getModelViewStack();
+            // TODO 1.21.6 modelViewStack.pushMatrix();
+            // TODO 1.21.6 modelViewStack.mul(poseStack);
+            // TODO 1.21.6 modelViewStack.translate(x, y, z);
+            // TODO 1.21.6 RenderType.guiTextured(atlasLocation).draw(meshData);
+            // TODO 1.21.6 modelViewStack.popMatrix();
         }
     }
 }

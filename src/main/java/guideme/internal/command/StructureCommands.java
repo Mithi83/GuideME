@@ -365,7 +365,7 @@ public final class StructureCommands {
                                 origin,
                                 actualSize,
                                 false,
-                                Blocks.AIR);
+                                List.of());
 
                         var compound = structureTemplate.save(new CompoundTag());
                         if (selectedPath.toLowerCase(Locale.ROOT).endsWith(".snbt")) {

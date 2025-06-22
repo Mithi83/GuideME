@@ -1,11 +1,11 @@
 package guideme.internal.siteexport;
 
-import com.mojang.blaze3d.buffers.BufferType;
-import com.mojang.blaze3d.buffers.BufferUsage;
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
+
 import java.util.function.IntUnaryOperator;
 
 final class TextureDownloader {
@@ -19,12 +19,12 @@ final class TextureDownloader {
     }
 
     public static void downloadTexture(GpuTexture texture, int mipLevel, IntUnaryOperator pixelOp,
-            NativeImage nativeImage) {
+                                       NativeImage nativeImage) {
         downloadTexture(texture, mipLevel, pixelOp, nativeImage, false);
     }
 
     public static void downloadTexture(GpuTexture texture, int mipLevel, IntUnaryOperator pixelOp,
-            NativeImage nativeImage, boolean flipY) {
+                                       NativeImage nativeImage, boolean flipY) {
         var width = texture.getWidth(mipLevel);
         var height = texture.getHeight(mipLevel);
 
@@ -36,24 +36,24 @@ final class TextureDownloader {
         int byteSize = texture.getFormat().pixelSize() * width * height;
 
         try (var downloadBuffer = RenderSystem.getDevice().createBuffer(() -> "Texture output buffer",
-                BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, byteSize)) {
+                GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ, byteSize)) {
             CommandEncoder commandencoder = RenderSystem.getDevice().createCommandEncoder();
 
             commandencoder.copyTextureToBuffer(texture, downloadBuffer, 0, () -> {
             }, 0);
 
-            try (var readView = commandencoder.readBuffer(downloadBuffer)) {
+            try (var mappedView = commandencoder.mapBuffer(downloadBuffer, true, false)) {
                 if (flipY) {
                     for (int y = 0; y < height; y++) {
                         for (int x = 0; x < width; x++) {
-                            int pixel = readView.data().getInt((x + y * width) * texture.getFormat().pixelSize());
+                            int pixel = mappedView.data().getInt((x + y * width) * texture.getFormat().pixelSize());
                             nativeImage.setPixelABGR(x, height - y - 1, pixelOp.applyAsInt(pixel));
                         }
                     }
                 } else {
                     for (int y = 0; y < height; y++) {
                         for (int x = 0; x < width; x++) {
-                            int pixel = readView.data().getInt((x + y * width) * texture.getFormat().pixelSize());
+                            int pixel = mappedView.data().getInt((x + y * width) * texture.getFormat().pixelSize());
                             nativeImage.setPixelABGR(x, y, pixelOp.applyAsInt(pixel));
                         }
                     }

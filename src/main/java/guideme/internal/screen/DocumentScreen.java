@@ -193,8 +193,8 @@ public abstract class DocumentScreen extends IndepentScaleScreen implements Guid
 
         // guiGraphics.enableScissor(documentRect.x(), documentRect.y(), documentRect.right(), documentRect.bottom());
         context.pushScissor(documentRect);
-        poseStack.pushPose();
-        poseStack.translate(documentRect.x() - documentViewport.x(), documentRect.y() - documentViewport.y(), 0);
+        poseStack.pushMatrix();
+        poseStack.translate(documentRect.x() - documentViewport.x(), documentRect.y() - documentViewport.y());
 
         // Render all text content in one large batch to improve performance
         var buffers = context.beginBatch();
@@ -214,7 +214,7 @@ public abstract class DocumentScreen extends IndepentScaleScreen implements Guid
             renderHoverOutline(document, context);
         }
 
-        poseStack.popPose();
+        poseStack.popMatrix();
 
     }
 
@@ -225,8 +225,9 @@ public abstract class DocumentScreen extends IndepentScaleScreen implements Guid
             return;
         }
 
-        context.poseStack().pushPose();
-        context.poseStack().translate(0, 0, 1000);
+        // TODO Custom render state needed for this
+        context.poseStack().pushMatrix();
+        // TODO 1.21.6 context.poseStack().translate(0, 0, 1000);
 
         GL20.glLogicOp(GL20.GL_XOR);
         GL20.glEnable(GL20.GL_COLOR_LOGIC_OP);
@@ -289,7 +290,7 @@ public abstract class DocumentScreen extends IndepentScaleScreen implements Guid
                 bounds.x(),
                 bounds.bottom());
 
-        context.poseStack().popPose();
+        context.poseStack().popMatrix();
     }
 
     @Override
@@ -555,9 +556,7 @@ public abstract class DocumentScreen extends IndepentScaleScreen implements Guid
             y = this.height - frameHeight - 6;
         }
 
-        int zOffset = 400;
-
-        TooltipRenderUtil.renderTooltipBackground(guiGraphics, x, y, frameWidth, frameHeight, zOffset, sprite);
+        TooltipRenderUtil.renderTooltipBackground(guiGraphics, x, y, frameWidth, frameHeight, sprite);
 
         if (!tooltip.getIcon().isEmpty()) {
             x += 18;
@@ -565,14 +564,14 @@ public abstract class DocumentScreen extends IndepentScaleScreen implements Guid
 
         var poseStack = guiGraphics.pose();
         var bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        poseStack.pushPose();
-        poseStack.translate(0.0, 0.0, zOffset);
+        // TODO 1.21.6 poseStack.pushMatrix();
+        // TODO 1.21.6 poseStack.translate(0.0, 0.0, zOffset);
         int currentY = y;
 
         // Batch-render tooltip text first
         for (int i = 0; i < clientLines.size(); ++i) {
             var line = clientLines.get(i);
-            line.renderText(minecraft.font, x, currentY, poseStack.last().pose(), bufferSource);
+            line.renderText(guiGraphics, minecraft.font, x, currentY);
             currentY += line.getHeight(font) + (i == 0 ? 2 : 0);
         }
 
@@ -581,10 +580,10 @@ public abstract class DocumentScreen extends IndepentScaleScreen implements Guid
         // Then render tooltip decorations, items, etc.
         currentY = y;
         if (!tooltip.getIcon().isEmpty()) {
-            poseStack.pushPose();
-            poseStack.translate(0, 0, zOffset);
+            // TODO 1.21.6 poseStack.pushMatrix();
+            // TODO 1.21.6 poseStack.translate(0, 0, zOffset);
             guiGraphics.renderItem(tooltip.getIcon(), x - 18, y);
-            poseStack.popPose();
+            // TODO 1.21.6 poseStack.popMatrix();
         }
 
         for (int i = 0; i < clientLines.size(); ++i) {
@@ -592,7 +591,7 @@ public abstract class DocumentScreen extends IndepentScaleScreen implements Guid
             line.renderImage(minecraft.font, x, currentY, frameWidth, frameHeight, guiGraphics);
             currentY += line.getHeight(font) + (i == 0 ? 2 : 0);
         }
-        poseStack.popPose();
+        // TODO 1.21.6 poseStack.popMatrix();
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import guideme.hooks.RenderToTextureHooks;
 import guideme.internal.util.Platform;
 import java.io.IOException;
@@ -21,7 +22,8 @@ import java.util.OptionalInt;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.FogParameters;
+import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer;
+import net.minecraft.client.renderer.PerspectiveProjectionMatrixBuffer;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
@@ -39,6 +41,8 @@ public class OffScreenRenderer implements AutoCloseable {
     private final CommandEncoder commandEncoder;
     private final GpuTexture colorTexture;
     private final GpuTexture depthTexture;
+    private final PerspectiveProjectionMatrixBuffer projMatrixBuffer;
+    private final Lighting lighting = new Lighting();
 
     public OffScreenRenderer(int width, int height) {
         this.width = width;
@@ -49,15 +53,21 @@ public class OffScreenRenderer implements AutoCloseable {
         device = RenderSystem.getDevice();
         commandEncoder = device.createCommandEncoder();
 
+        projMatrixBuffer = new PerspectiveProjectionMatrixBuffer("GuideME OffScreen");
+
         colorTexture = Objects.requireNonNull(fb.getColorTexture(), "colorTexture");
+        var colorTextureView = Objects.requireNonNull(fb.getColorTextureView(), "colorTexture");
         depthTexture = Objects.requireNonNull(fb.getDepthTexture(), "depthTexture");
-        commandEncoder.createRenderPass(colorTexture, OptionalInt.of(0), depthTexture, OptionalDouble.of(1.0)).close();
+        var depthTextureView = Objects.requireNonNull(fb.getDepthTextureView(), "depthTexture");
+        commandEncoder.createRenderPass(() -> "GuideME OffScreen", colorTextureView, OptionalInt.of(0), depthTextureView, OptionalDouble.of(1.0)).close();
     }
 
     @Override
     public void close() {
         nativeImage.close();
         fb.destroyBuffers();
+        projMatrixBuffer.close();
+        lighting.close();
     }
 
     public byte[] captureAsPng(Runnable r) {
@@ -145,19 +155,18 @@ public class OffScreenRenderer implements AutoCloseable {
     }
 
     public void setupItemRendering() {
-        // See GameRenderer
+        // See GuiRenderer
         // Set up GL state for GUI rendering where the 16x16 item will fill the entire framebuffer
         var matrix4f = new Matrix4f().setOrtho(
                 0.0f, 16,
                 16, 0.0f,
                 1000.0f, 21000.0f);
-        RenderSystem.setProjectionMatrix(matrix4f, ProjectionType.ORTHOGRAPHIC);
+        RenderSystem.setProjectionMatrix(projMatrixBuffer.getBuffer(matrix4f), ProjectionType.ORTHOGRAPHIC);
 
         var poseStack = RenderSystem.getModelViewStack();
         poseStack.identity();
         poseStack.translate(0.0f, 0.0f, -11000.0f);
-        Lighting.setupFor3DItems();
-        RenderSystem.setShaderFog(FogParameters.NO_FOG);
+        lighting.setupFor(Lighting.Entry.ITEMS_3D);
     }
 
     public void setupOrtographicRendering() {
@@ -168,14 +177,12 @@ public class OffScreenRenderer implements AutoCloseable {
 
         // Set up GL state for GUI rendering where the 16x16 item will fill the entire framebuffer
         RenderSystem.setProjectionMatrix(
-                new Matrix4f().ortho(-1, 1, 1, -1, 1000, 3000),
+                projMatrixBuffer.getBuffer(new Matrix4f().ortho(-1, 1, 1, -1, 1000, 3000)),
                 ProjectionType.ORTHOGRAPHIC);
 
         var poseStack = RenderSystem.getModelViewStack();
         poseStack.identity();
         poseStack.translate(0.0F, 0.0F, -2000.0F);
-
-        RenderSystem.setShaderFog(FogParameters.NO_FOG);
 
         poseStack.scale(1, -1, -1);
         poseStack.rotate(new Quaternionf().rotationY(Mth.DEG_TO_RAD * -180));
@@ -190,7 +197,7 @@ public class OffScreenRenderer implements AutoCloseable {
         poseStack.rotate(flip);
         poseStack.rotate(rotate);
 
-        Lighting.setupLevel();
+        lighting.setupFor(Lighting.Entry.LEVEL);
     }
 
     public void setupPerspectiveRendering(float zoom, float fov, Vector3f eyePos, Vector3f lookAt) {
@@ -202,14 +209,14 @@ public class OffScreenRenderer implements AutoCloseable {
         }
 
         projMat.mul(new Matrix4f().perspective(fov, aspectRatio, 0.05F, 16));
-        RenderSystem.setProjectionMatrix(projMat, ProjectionType.PERSPECTIVE);
+        RenderSystem.setProjectionMatrix(projMatrixBuffer.getBuffer(projMat), ProjectionType.PERSPECTIVE);
 
         var poseStack = RenderSystem.getModelViewStack();
         poseStack.identity();
         var vm = createViewMatrix(eyePos, lookAt);
         poseStack.mul(vm);
 
-        Lighting.setupLevel();
+        lighting.setupFor(Lighting.Entry.LEVEL);
     }
 
     /**

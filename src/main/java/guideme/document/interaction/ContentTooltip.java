@@ -46,17 +46,18 @@ public class ContentTooltip implements GuideTooltip {
                     }
 
                     @Override
-                    public void renderText(Font font, int x, int y, Matrix4f matrix,
-                            MultiBufferSource.BufferSource bufferSource) {
+                    public void renderText(GuiGraphics guiGraphics, Font font, int x, int y) {
                         getLayoutBox(); // Updates layout
 
-                        var guiGraphics = new GuiGraphics(Minecraft.getInstance(), bufferSource);
-                        var poseStack = guiGraphics.pose();
-                        poseStack.mulPose(matrix);
-                        poseStack.translate(x, y, 0);
+                        var pose = guiGraphics.pose();
+                        pose.pushMatrix();
+                        pose.translate(x, y);
 
                         var ctx = new SimpleRenderContext(layoutViewport, guiGraphics);
-                        content.renderBatch(ctx, bufferSource);
+                        // TODO 1.21.6 buffer source still make sense at all?
+                        content.renderBatch(ctx, Minecraft.getInstance().renderBuffers().bufferSource());
+
+                        pose.popMatrix();
                     }
 
                     @Override
@@ -64,11 +65,11 @@ public class ContentTooltip implements GuideTooltip {
                         getLayoutBox(); // Updates layout
 
                         var pose = guiGraphics.pose();
-                        pose.pushPose();
-                        pose.translate(x, y, 0);
+                        pose.pushMatrix();
+                        pose.translate(x, y);
                         var ctx = new SimpleRenderContext(layoutViewport, guiGraphics);
                         content.render(ctx);
-                        pose.popPose();
+                        pose.popMatrix();
                     }
                 });
     }

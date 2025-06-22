@@ -58,7 +58,7 @@ public final class Blitter {
                     1536,
                     GUI_TEXTURED_OPAQUE,
                     RenderType.CompositeState.builder()
-                            .setTextureState(new RenderStateShard.TextureStateShard(textureId, TriState.DEFAULT, false))
+                            .setTextureState(new RenderStateShard.TextureStateShard(textureId, false))
                             .createCompositeState(false)));
 
     // This assumption is obviously bogus, but currently all textures are this size,
@@ -297,25 +297,25 @@ public final class Blitter {
             y2 += srcRect.getHeight();
         }
 
-        Matrix4f matrix = guiGraphics.pose().last().pose();
+        var matrix = guiGraphics.pose();
 
         var bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,
                 DefaultVertexFormat.POSITION_TEX_COLOR);
-        bufferbuilder.addVertex(matrix, x1, y2, zOffset)
+        bufferbuilder.addVertexWith2DPose(matrix, x1, y2, zOffset)
                 .setUv(minU, maxV)
                 .setColor(r, g, b, a);
-        bufferbuilder.addVertex(matrix, x2, y2, zOffset)
+        bufferbuilder.addVertexWith2DPose(matrix, x2, y2, zOffset)
                 .setUv(maxU, maxV)
                 .setColor(r, g, b, a);
-        bufferbuilder.addVertex(matrix, x2, y1, zOffset)
+        bufferbuilder.addVertexWith2DPose(matrix, x2, y1, zOffset)
                 .setUv(maxU, minV)
                 .setColor(r, g, b, a);
-        bufferbuilder.addVertex(matrix, x1, y1, zOffset)
+        bufferbuilder.addVertexWith2DPose(matrix, x1, y1, zOffset)
                 .setUv(minU, minV)
                 .setColor(r, g, b, a);
 
         if (blending) {
-            RenderType.guiTextured(texture).draw(bufferbuilder.buildOrThrow());
+            // TODO 1.21.6 RenderType.guiTextured(texture).draw(bufferbuilder.buildOrThrow());
         } else {
             GUI_TEXTURED_OPAQUE_TYPE.apply(texture).draw(bufferbuilder.buildOrThrow());
         }
