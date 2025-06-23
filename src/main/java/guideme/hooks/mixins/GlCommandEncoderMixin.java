@@ -5,25 +5,30 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.blaze3d.opengl.GlCommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import guideme.hooks.RenderToTextureHooks;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
+
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(GlCommandEncoder.class)
 public class GlCommandEncoderMixin {
 
-    @WrapMethod(method = "createRenderPass(Lcom/mojang/blaze3d/textures/GpuTexture;Ljava/util/OptionalInt;Lcom/mojang/blaze3d/textures/GpuTexture;Ljava/util/OptionalDouble;)Lcom/mojang/blaze3d/systems/RenderPass;")
-    public RenderPass overrideRenderTargets(GpuTexture colorBuffer,
+    @WrapMethod(method = "createRenderPass(Ljava/util/function/Supplier;Lcom/mojang/blaze3d/textures/GpuTextureView;Ljava/util/OptionalInt;Lcom/mojang/blaze3d/textures/GpuTextureView;Ljava/util/OptionalDouble;)Lcom/mojang/blaze3d/systems/RenderPass;")
+    public RenderPass overrideRenderTargets(
+            Supplier<String> debugName,
+            GpuTextureView colorBuffer,
             OptionalInt clearColor,
-            @Nullable GpuTexture depthBuffer,
+            @Nullable GpuTextureView depthBuffer,
             OptionalDouble clearDepth,
             Operation<RenderPass> original) {
         colorBuffer = RenderToTextureHooks.replaceColorTarget(colorBuffer);
         depthBuffer = RenderToTextureHooks.replaceDepthTarget(depthBuffer);
 
-        return original.call(colorBuffer, clearColor, depthBuffer, clearDepth);
+        return original.call(debugName, colorBuffer, clearColor, depthBuffer, clearDepth);
     }
 
     @WrapMethod(method = "clearColorTexture")
