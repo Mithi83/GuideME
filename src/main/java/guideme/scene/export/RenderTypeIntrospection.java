@@ -1,8 +1,7 @@
 package guideme.scene.export;
 
-import java.util.List;
-
 import com.mojang.blaze3d.textures.FilterMode;
+import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;

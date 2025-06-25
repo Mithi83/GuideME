@@ -12,9 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.renderer.MultiBufferSource;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 
 /**
  * A {@link GuideTooltip} that renders a {@link LytBlock} as the tooltip content.
@@ -54,8 +52,7 @@ public class ContentTooltip implements GuideTooltip {
                         pose.translate(x, y);
 
                         var ctx = new SimpleRenderContext(layoutViewport, guiGraphics);
-                        // TODO 1.21.6 buffer source still make sense at all?
-                        content.renderBatch(ctx, Minecraft.getInstance().renderBuffers().bufferSource());
+                        content.render(ctx);
 
                         pose.popMatrix();
                     }

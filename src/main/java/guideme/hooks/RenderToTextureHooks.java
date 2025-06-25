@@ -24,14 +24,16 @@ public final class RenderToTextureHooks {
     }
 
     public static GpuTextureView replaceColorTarget(GpuTextureView colorTarget) {
-        if (targetOverride != null && colorTarget == Minecraft.getInstance().getMainRenderTarget().getColorTextureView()) {
+        if (targetOverride != null
+                && colorTarget == Minecraft.getInstance().getMainRenderTarget().getColorTextureView()) {
             return targetOverride.getColorTextureView();
         }
         return colorTarget;
     }
 
     public static GpuTextureView replaceDepthTarget(GpuTextureView depthTarget) {
-        if (targetOverride != null && depthTarget == Minecraft.getInstance().getMainRenderTarget().getDepthTextureView()) {
+        if (targetOverride != null
+                && depthTarget == Minecraft.getInstance().getMainRenderTarget().getDepthTextureView()) {
             return targetOverride.getDepthTextureView();
         }
         return depthTarget;

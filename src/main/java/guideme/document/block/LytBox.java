@@ -6,7 +6,6 @@ import guideme.layout.LayoutContext;
 import guideme.render.RenderContext;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.renderer.MultiBufferSource;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class LytBox extends LytBlock implements LytBlockContainer {
@@ -110,14 +109,6 @@ public abstract class LytBox extends LytBlock implements LytBlockContainer {
     @Override
     public List<? extends LytNode> getChildren() {
         return children;
-    }
-
-    @Override
-    public void renderBatch(RenderContext context, MultiBufferSource buffers) {
-        context.guiGraphics().nextStratum();
-        for (var child : children) {
-            child.renderBatch(context, buffers);
-        }
     }
 
     @Override

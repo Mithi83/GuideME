@@ -1,12 +1,9 @@
 package guideme.scene;
 
 import com.mojang.blaze3d.ProjectionType;
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.blaze3d.vertex.PoseStack;
 import guideme.color.ColorValue;
-import guideme.color.ConstantColor;
 import guideme.color.LightDarkMode;
 import guideme.color.SymbolicColor;
 import guideme.document.LytPoint;
@@ -21,8 +18,6 @@ import guideme.document.interaction.GuideTooltip;
 import guideme.document.interaction.InteractiveElement;
 import guideme.document.interaction.LytWidget;
 import guideme.extensions.ExtensionCollection;
-import guideme.hooks.RenderToTextureHooks;
-import guideme.internal.GuideME;
 import guideme.internal.GuideMEClient;
 import guideme.internal.scene.ScenePictureInPictureRenderer;
 import guideme.internal.screen.GuideIconButton;
@@ -33,22 +28,20 @@ import guideme.scene.annotation.InWorldAnnotation;
 import guideme.scene.annotation.InWorldBoxAnnotation;
 import guideme.scene.annotation.SceneAnnotation;
 import guideme.ui.GuideUiHost;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.PerspectiveProjectionMatrixBuffer;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
 import org.joml.Vector2i;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
 
 /**
  * Shows a pseudo-in-world scene within the guidebook.
@@ -228,7 +221,10 @@ public class LytGuidebookScene extends LytBox {
                 scene.getCameraSettings().setViewportSize(prefSize);
                 var annotations = hideAnnotations ? Collections.<InWorldAnnotation>emptyList()
                         : scene.getInWorldAnnotations();
-                renderer.render(scene.getLevel(), scene.getCameraSettings(), annotations, LightDarkMode.LIGHT_MODE);
+                var buffers = Minecraft.getInstance().renderBuffers().bufferSource();
+                renderer.render(scene.getLevel(), scene.getCameraSettings(), buffers, annotations,
+                        LightDarkMode.LIGHT_MODE, new PoseStack());
+                buffers.endBatch();
             });
         }
     }
@@ -295,10 +291,6 @@ public class LytGuidebookScene extends LytBox {
         }
 
         @Override
-        public void renderBatch(RenderContext context, MultiBufferSource buffers) {
-        }
-
-        @Override
         public void render(RenderContext context) {
             if (background != null) {
                 context.fillRect(bounds, background);
@@ -312,80 +304,47 @@ public class LytGuidebookScene extends LytBox {
             var scissorArea = context.guiGraphics().peekScissorStack();
             // Pre-apply scissor area
             screenBounds = scissorArea != null ? scissorArea.intersection(screenBounds) : screenBounds;
-
-            GuiGraphics guiGraphics = context.guiGraphics();
-            guiGraphics.submitPictureInPictureRenderState(new ScenePictureInPictureRenderer.State(
-                    context.poseStack(),
-                    bounds.x(),
-                    bounds.y(),
-                    bounds.right(),
-                    bounds.bottom(),
-                    LytGuidebookScene.this,
-                    screenBounds,
-                    scissorArea
-            ));
-
-//            var window = Minecraft.getInstance().getWindow();
-//
-//            // transform our document viewport into physical screen coordinates
-//            var viewport = bounds.transform(context.poseStack());
-//            var textureWidth = (int) (viewport.width() * window.getGuiScale());
-//            var textureHeight = (int) (viewport.height() * window.getGuiScale());
-//            context.pushScissor(bounds); // We'll actually sacrifice this
-//            RenderSystem.disableScissorForRenderTypeDraws();
-//
-//            boolean withStencil = Minecraft.getInstance().getMainRenderTarget().useStencil;
-//            var renderTarget = new TextureTarget("GuideScene RTT", textureWidth, textureHeight, true, withStencil);
-//            try {
-//                RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(
-//                        renderTarget.getColorTexture(), 0,
-//                        renderTarget.getDepthTexture(), 1.0);
-//
-//                RenderToTextureHooks.targetOverride = renderTarget;
-//
-//                var renderer = GuidebookLevelRenderer.getInstance();
-//
-//                Collection<InWorldAnnotation> inWorldAnnotations;
-//                if (hideAnnotations) {
-//                    // We still show transient annotations even if static annotations are hidden
-//                    if (transientHoveredAnnotation
-//                            && hoveredAnnotation instanceof InWorldAnnotation hoveredInWorldAnnotation) {
-//                        inWorldAnnotations = Collections.singletonList(hoveredInWorldAnnotation);
-//                    } else {
-//                        inWorldAnnotations = Collections.emptyList();
-//                    }
-//                } else {
-//                    inWorldAnnotations = scene.getInWorldAnnotations();
-//                }
-//                renderer.render(scene.getLevel(), scene.getCameraSettings(), inWorldAnnotations,
-//                        context.lightDarkMode());
-//
-//                renderDebugCrosshairs();
-//
-//                RenderToTextureHooks.targetOverride = null;
-//                context.popScissor(); // Our manually reset scissor will now be dropped back to the last valid one
-//
-//                // We need to wrap the texture to be able to use it via a resource location
-//                var t = new ExternalTexture(renderTarget.getColorTexture(), renderTarget.getColorTextureView());
-//                var offScreenId = GuideME.makeId("scene_off_screen_surface");
-//                TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-//                textureManager.register(offScreenId, t);
-//                try {
-//                    // We need to flip Y
-//                    context.fillTexturedRect(bounds, offScreenId, ConstantColor.WHITE, ConstantColor.WHITE,
-//                            ConstantColor.WHITE, ConstantColor.WHITE, 0, 1, 1, 0);
-//                } finally {
-//                    textureManager.release(offScreenId);
-//                }
-//
-//            } finally {
-//                RenderToTextureHooks.targetOverride = null;
-//                renderTarget.destroyBuffers();
-//            }
+            if (screenBounds != null) {
+                GuiGraphics guiGraphics = context.guiGraphics();
+                guiGraphics.submitPictureInPictureRenderState(new ScenePictureInPictureRenderer.State(
+                        context.lightDarkMode(),
+                        new Matrix3x2f(context.poseStack()),
+                        bounds.x(),
+                        bounds.y(),
+                        bounds.right(),
+                        bounds.bottom(),
+                        LytGuidebookScene.this,
+                        screenBounds,
+                        scissorArea,
+                        this::renderViewport));
+            }
 
             if (!hideAnnotations) {
                 renderOverlayAnnotations(scene, context);
             }
+        }
+
+        private void renderViewport(LightDarkMode lightDarkMode,
+                PoseStack poseStack,
+                MultiBufferSource.BufferSource buffers) {
+            var renderer = GuidebookLevelRenderer.getInstance();
+
+            Collection<InWorldAnnotation> inWorldAnnotations;
+            if (hideAnnotations) {
+                // We still show transient annotations even if static annotations are hidden
+                if (transientHoveredAnnotation
+                        && hoveredAnnotation instanceof InWorldAnnotation hoveredInWorldAnnotation) {
+                    inWorldAnnotations = Collections.singletonList(hoveredInWorldAnnotation);
+                } else {
+                    inWorldAnnotations = Collections.emptyList();
+                }
+            } else {
+                inWorldAnnotations = scene.getInWorldAnnotations();
+            }
+            renderer.render(scene.getLevel(), scene.getCameraSettings(), buffers, inWorldAnnotations,
+                    lightDarkMode, poseStack);
+
+            renderDebugCrosshairs();
         }
 
         /**

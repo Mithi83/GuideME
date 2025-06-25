@@ -14,7 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec2;
 import org.joml.Matrix3x2f;
-import org.joml.Matrix4f;
 
 public final class SimpleRenderContext implements RenderContext {
     private final List<LytRect> viewportStack = new ArrayList<>();
@@ -65,8 +64,7 @@ public final class SimpleRenderContext implements RenderContext {
                 resolveColor(topRight),
                 resolveColor(bottomRight),
                 resolveColor(bottomLeft),
-                guiGraphics().peekScissorStack()
-        ));
+                guiGraphics().peekScissorStack()));
     }
 
     @Override
@@ -90,8 +88,7 @@ public final class SimpleRenderContext implements RenderContext {
                 resolveColor(topRight),
                 resolveColor(bottomRight),
                 resolveColor(bottomLeft),
-                guiGraphics().peekScissorStack()
-        ));
+                guiGraphics().peekScissorStack()));
     }
 
     @Override
@@ -104,21 +101,19 @@ public final class SimpleRenderContext implements RenderContext {
                 p2,
                 p3,
                 resolveColor(color),
-                guiGraphics().peekScissorStack()
-        ));
+                guiGraphics().peekScissorStack()));
     }
 
     @Override
     public void renderItem(ItemStack stack, int x, int y, int z, float width, float height) {
-        var mc = Minecraft.getInstance();
-
         var pose = poseStack();
         pose.pushMatrix();
+        pose.translate(x, y);
         // Purposefully do NOT scale the normals!
         // this happens on non-uniform scales when calling the normal scale method
         pose.scale(width / 16, height / 16);
         guiGraphics().renderItem(stack, 0, 0);
-        guiGraphics().renderItemDecorations(mc.font, stack, 0, 0);
+        guiGraphics().renderItemDecorations(font(), stack, 0, 0);
         pose.popMatrix();
     }
 

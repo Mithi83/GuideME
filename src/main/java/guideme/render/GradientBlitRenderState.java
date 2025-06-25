@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
 /**
- * Just an extension of {@link net.minecraft.client.gui.render.state.BlitRenderState} that
- * allows for all four corners of the rectangle to have a different color, not just the top/bottom.
+ * Just an extension of {@link net.minecraft.client.gui.render.state.BlitRenderState} that allows for all four corners
+ * of the rectangle to have a different color, not just the top/bottom.
  */
 record GradientBlitRenderState(
         RenderPipeline pipeline,
@@ -29,8 +29,7 @@ record GradientBlitRenderState(
         int colBR,
         int colBL,
         @Nullable ScreenRectangle scissorArea,
-        @Nullable ScreenRectangle bounds
-) implements GuiElementRenderState {
+        @Nullable ScreenRectangle bounds) implements GuiElementRenderState {
     public GradientBlitRenderState(
             RenderPipeline pipeline,
             TextureSetup textureSetup,
@@ -47,8 +46,7 @@ record GradientBlitRenderState(
             int colTR,
             int colBR,
             int colBL,
-            @Nullable ScreenRectangle scissorArea
-    ) {
+            @Nullable ScreenRectangle scissorArea) {
         this(
                 pipeline,
                 textureSetup,
@@ -66,8 +64,7 @@ record GradientBlitRenderState(
                 colBR,
                 colBL,
                 scissorArea,
-                getBounds(x0, y0, x1, y1, pose, scissorArea)
-        );
+                getBounds(x0, y0, x1, y1, pose, scissorArea));
     }
 
     @Override
@@ -80,8 +77,7 @@ record GradientBlitRenderState(
 
     @Nullable
     private static ScreenRectangle getBounds(
-            int x0, int y0, int x1, int y1, Matrix3x2f pose, @Nullable ScreenRectangle scissorArea
-    ) {
+            int x0, int y0, int x1, int y1, Matrix3x2f pose, @Nullable ScreenRectangle scissorArea) {
         ScreenRectangle screenrectangle = new ScreenRectangle(x0, y0, x1 - x0, y1 - y0).transformMaxBounds(pose);
         return scissorArea != null ? scissorArea.intersection(screenrectangle) : screenrectangle;
     }

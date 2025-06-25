@@ -35,17 +35,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.DetectedVersion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.render.GuiRenderer;
-import net.minecraft.client.gui.render.pip.GuiBannerResultRenderer;
-import net.minecraft.client.gui.render.pip.GuiBookModelRenderer;
-import net.minecraft.client.gui.render.pip.GuiEntityRenderer;
-import net.minecraft.client.gui.render.pip.GuiProfilerChartRenderer;
-import net.minecraft.client.gui.render.pip.GuiSignRenderer;
-import net.minecraft.client.gui.render.pip.GuiSkinRenderer;
-import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
@@ -513,7 +504,8 @@ public class SiteExporter implements ResourceExporter {
                     client.gameRenderer.guiRenderState.reset();
                     guiGraphics.renderItem(stack, 0, 0);
                     guiGraphics.renderItemDecorations(client.font, stack, 0, 0, "");
-                    client.gameRenderer.guiRenderer.render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
+                    client.gameRenderer.guiRenderer
+                            .render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
                 }, sprites, true);
 
                 String absIconUrl = "/" + outputFolder.relativize(iconPath).toString().replace('\\', '/');
@@ -567,7 +559,8 @@ public class SiteExporter implements ResourceExporter {
                             if (sprite != null) {
                                 client.gameRenderer.guiRenderState.reset();
                                 guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, 0, 0, 16, 16, color);
-                                client.gameRenderer.guiRenderer.render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
+                                client.gameRenderer.guiRenderer
+                                        .render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
                             }
                         },
                         sprite != null ? Set.of(sprite) : Set.of(),

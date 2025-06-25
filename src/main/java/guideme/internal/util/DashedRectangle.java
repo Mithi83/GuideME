@@ -2,14 +2,11 @@ package guideme.internal.util;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import guideme.document.LytRect;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.util.Mth;
 import org.joml.Matrix3x2f;
-import org.joml.Matrix3x2fStack;
 import org.joml.Matrix3x2fc;
 
 /**
@@ -55,7 +52,8 @@ public final class DashedRectangle {
             builder.addVertexWith2DPose(pose, Mth.clamp(x + pattern.onLength(), x1, x2), y, z).setColor(color);
             builder.addVertexWith2DPose(pose, Mth.clamp(x, x1, x2), y, z).setColor(color);
             builder.addVertexWith2DPose(pose, Mth.clamp(x, x1, x2), y + pattern.width(), z).setColor(color);
-            builder.addVertexWith2DPose(pose, Mth.clamp(x + pattern.onLength(), x1, x2), y + pattern.width(), z).setColor(color);
+            builder.addVertexWith2DPose(pose, Mth.clamp(x + pattern.onLength(), x1, x2), y + pattern.width(), z)
+                    .setColor(color);
         }
     }
 
@@ -73,7 +71,8 @@ public final class DashedRectangle {
             builder.addVertexWith2DPose(pose, x + pattern.width(), Mth.clamp(y, y1, y2), z).setColor(color);
             builder.addVertexWith2DPose(pose, x, Mth.clamp(y, y1, y2), z).setColor(color);
             builder.addVertexWith2DPose(pose, x, Mth.clamp(y + pattern.onLength(), y1, y2), z).setColor(color);
-            builder.addVertexWith2DPose(pose, x + pattern.width(), Mth.clamp(y + pattern.onLength(), y1, y2), z).setColor(color);
+            builder.addVertexWith2DPose(pose, x + pattern.width(), Mth.clamp(y + pattern.onLength(), y1, y2), z)
+                    .setColor(color);
         }
     }
 

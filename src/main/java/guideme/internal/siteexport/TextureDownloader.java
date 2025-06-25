@@ -5,7 +5,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
-
 import java.util.function.IntUnaryOperator;
 
 final class TextureDownloader {
@@ -19,12 +18,12 @@ final class TextureDownloader {
     }
 
     public static void downloadTexture(GpuTexture texture, int mipLevel, IntUnaryOperator pixelOp,
-                                       NativeImage nativeImage) {
+            NativeImage nativeImage) {
         downloadTexture(texture, mipLevel, pixelOp, nativeImage, false);
     }
 
     public static void downloadTexture(GpuTexture texture, int mipLevel, IntUnaryOperator pixelOp,
-                                       NativeImage nativeImage, boolean flipY) {
+            NativeImage nativeImage, boolean flipY) {
         var width = texture.getWidth(mipLevel);
         var height = texture.getHeight(mipLevel);
 

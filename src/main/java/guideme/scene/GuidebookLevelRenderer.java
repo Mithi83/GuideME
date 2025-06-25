@@ -9,6 +9,8 @@ import guideme.internal.scene.FakeRenderEnvironment;
 import guideme.scene.annotation.InWorldAnnotation;
 import guideme.scene.annotation.InWorldAnnotationRenderer;
 import guideme.scene.level.GuidebookLevel;
+import java.util.ArrayList;
+import java.util.Collection;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -33,15 +35,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.NeoForgeRenderTypes;
 import net.neoforged.neoforge.client.RenderTypeHelper;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 
 public class GuidebookLevelRenderer {
 
@@ -49,7 +46,8 @@ public class GuidebookLevelRenderer {
 
     private final GuidebookLightmap lightmap = new GuidebookLightmap();
 
-    private final PerspectiveProjectionMatrixBuffer projMatBuffer = new PerspectiveProjectionMatrixBuffer("GuideME level renderer proj mat UBO");
+    private final PerspectiveProjectionMatrixBuffer projMatBuffer = new PerspectiveProjectionMatrixBuffer(
+            "GuideME level renderer proj mat UBO");
 
     public static GuidebookLevelRenderer getInstance() {
         RenderSystem.assertOnRenderThread();
@@ -60,9 +58,11 @@ public class GuidebookLevelRenderer {
     }
 
     public void render(GuidebookLevel level,
-                       CameraSettings cameraSettings,
-                       Collection<InWorldAnnotation> annotations,
-                       LightDarkMode lightDarkMode) {
+            CameraSettings cameraSettings,
+            MultiBufferSource.BufferSource buffers,
+            Collection<InWorldAnnotation> annotations,
+            LightDarkMode lightDarkMode,
+            PoseStack poseStack) {
         lightmap.update(level);
 
         level.onRenderFrame();
@@ -93,20 +93,8 @@ public class GuidebookLevelRenderer {
                         minecraft.options.glintStrength().get(),
                         level.getGameTime(),
                         deltaTracker,
-                        minecraft.options.getMenuBackgroundBlurriness()
-                );
+                        minecraft.options.getMenuBackgroundBlurriness());
 
-        var buffers = minecraft.renderBuffers().bufferSource();
-        render(level, cameraSettings, buffers, annotations, lightDarkMode);
-        buffers.endBatch();
-
-    }
-
-    public void render(GuidebookLevel level,
-                       CameraSettings cameraSettings,
-                       MultiBufferSource.BufferSource buffers,
-                       Collection<InWorldAnnotation> annotations,
-                       LightDarkMode lightDarkMode) {
         lightmap.update(level);
 
         var lightEngine = level.getLightEngine();
@@ -116,8 +104,6 @@ public class GuidebookLevelRenderer {
 
         var projectionMatrix = cameraSettings.getProjectionMatrix();
         var viewMatrix = cameraSettings.getViewMatrix();
-
-        var gameRenderer = Minecraft.getInstance().gameRenderer;
 
         // Essentially disable level fog
         RenderSystem.setShaderFog(gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
@@ -136,24 +122,22 @@ public class GuidebookLevelRenderer {
 
         gameRenderer.getLighting().setupFor(Lighting.Entry.LEVEL);
 
-        renderContent(level, buffers);
+        renderContent(level, buffers, new PoseStack());
 
         InWorldAnnotationRenderer.render(buffers, annotations, lightDarkMode);
 
         modelViewStack.popMatrix();
         RenderSystem.restoreProjectionMatrix();
-
-        gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D); // Reset to GUI lighting
     }
 
     /**
      * Render without any setup.
      */
-    public void renderContent(GuidebookLevel level, MultiBufferSource.BufferSource buffers) {
+    public void renderContent(GuidebookLevel level, MultiBufferSource.BufferSource buffers, PoseStack poseStack) {
         try (var fake = FakeRenderEnvironment.create(level)) {
-            renderBlocks(level, buffers, false);
-            renderBlockEntities(level, buffers, level.getPartialTick());
-            renderEntities(level, buffers, level.getPartialTick());
+            renderBlocks(level, buffers, false, poseStack);
+            renderBlockEntities(level, buffers, level.getPartialTick(), poseStack);
+            renderEntities(level, buffers, level.getPartialTick(), poseStack);
 
             // The order comes from LevelRenderer#renderLevel
             buffers.endBatch(RenderType.entitySolid(TextureAtlas.LOCATION_BLOCKS));
@@ -178,7 +162,7 @@ public class GuidebookLevelRenderer {
             buffers.endBatch(Sheets.chestSheet());
             buffers.endLastBatch();
 
-            renderBlocks(level, buffers, true);
+            renderBlocks(level, buffers, true, poseStack);
             for (var group : ChunkSectionLayerGroup.values()) {
                 if (group == ChunkSectionLayerGroup.OPAQUE) {
                     continue;
@@ -190,9 +174,9 @@ public class GuidebookLevelRenderer {
         }
     }
 
-    private void renderBlocks(GuidebookLevel level, MultiBufferSource buffers, boolean translucent) {
+    private void renderBlocks(GuidebookLevel level, MultiBufferSource buffers, boolean translucent,
+            PoseStack poseStack) {
         var blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-        var poseStack = new PoseStack();
 
         var randomSource = new SingleThreadedRandomSource(0L);
         var modelParts = new ArrayList<BlockModelPart>();
@@ -234,16 +218,15 @@ public class GuidebookLevelRenderer {
             poseStack.pushPose();
             poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
             blockRenderDispatcher.renderBatched(blockState, pos, level, poseStack, layer -> {
-                        return buffers.getBuffer(RenderTypeHelper.getEntityRenderType(layer));
-                    }, true,
+                return buffers.getBuffer(RenderTypeHelper.getEntityRenderType(layer));
+            }, true,
                     modelParts);
             poseStack.popPose();
         }
     }
 
-    private void renderBlockEntities(GuidebookLevel level, MultiBufferSource buffers, float partialTick) {
-        var poseStack = new PoseStack();
-
+    private void renderBlockEntities(GuidebookLevel level, MultiBufferSource buffers, float partialTick,
+            PoseStack poseStack) {
         var it = level.getFilledBlocks().iterator();
         while (it.hasNext()) {
             var pos = it.next();
@@ -270,9 +253,9 @@ public class GuidebookLevelRenderer {
     }
 
     private <E extends BlockEntity> void handleBlockEntity(PoseStack stack,
-                                                           E blockEntity,
-                                                           MultiBufferSource buffers,
-                                                           float partialTicks) {
+            E blockEntity,
+            MultiBufferSource buffers,
+            float partialTicks) {
         var dispatcher = Minecraft.getInstance().getBlockEntityRenderDispatcher();
         var renderer = dispatcher.getRenderer(blockEntity);
         if (renderer != null && renderer.shouldRender(blockEntity, blockEntity.getBlockPos().getCenter())) {
@@ -287,19 +270,18 @@ public class GuidebookLevelRenderer {
         }
     }
 
-    private void renderEntities(GuidebookLevel level, MultiBufferSource.BufferSource buffers, float partialTick) {
-        var poseStack = new PoseStack();
-
+    private void renderEntities(GuidebookLevel level, MultiBufferSource.BufferSource buffers, float partialTick,
+            PoseStack poseStack) {
         for (var entity : level.getEntitiesForRendering()) {
             handleEntity(level, poseStack, entity, buffers, partialTick);
         }
     }
 
     private <E extends Entity> void handleEntity(GuidebookLevel level,
-                                                 PoseStack poseStack,
-                                                 E entity,
-                                                 MultiBufferSource buffers,
-                                                 float partialTicks) {
+            PoseStack poseStack,
+            E entity,
+            MultiBufferSource buffers,
+            float partialTicks) {
         var dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         var renderer = dispatcher.getRenderer(entity);
         if (renderer == null) {
@@ -310,11 +292,11 @@ public class GuidebookLevelRenderer {
     }
 
     private static <E extends Entity, S extends EntityRenderState> void renderEntity(GuidebookLevel level,
-                                                                                     PoseStack poseStack,
-                                                                                     E entity,
-                                                                                     MultiBufferSource buffers,
-                                                                                     float partialTicks,
-                                                                                     EntityRenderer<? super E, S> renderer) {
+            PoseStack poseStack,
+            E entity,
+            MultiBufferSource buffers,
+            float partialTicks,
+            EntityRenderer<? super E, S> renderer) {
         var probePos = BlockPos.containing(entity.getLightProbePosition(partialTicks));
         int packedLight = LevelRenderer.getLightColor(level, probePos);
 

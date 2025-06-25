@@ -18,8 +18,7 @@ record FillTriangleRenderState(
         Vec2 p3,
         int color,
         @Nullable ScreenRectangle scissorArea,
-        @Nullable ScreenRectangle bounds
-) implements GuiElementRenderState {
+        @Nullable ScreenRectangle bounds) implements GuiElementRenderState {
     public FillTriangleRenderState(
             RenderPipeline pipeline,
             TextureSetup textureSetup,
@@ -28,8 +27,7 @@ record FillTriangleRenderState(
             Vec2 p2,
             Vec2 p3,
             int color,
-            @Nullable ScreenRectangle scissorArea
-    ) {
+            @Nullable ScreenRectangle scissorArea) {
         this(
                 pipeline,
                 textureSetup,
@@ -39,8 +37,7 @@ record FillTriangleRenderState(
                 p3,
                 color,
                 scissorArea,
-                getBounds(p1, p2, p3, pose, scissorArea)
-        );
+                getBounds(p1, p2, p3, pose, scissorArea));
     }
 
     @Override
@@ -52,8 +49,7 @@ record FillTriangleRenderState(
 
     @Nullable
     private static ScreenRectangle getBounds(
-            Vec2 p1, Vec2 p2, Vec2 p3, Matrix3x2f pose, @Nullable ScreenRectangle scissorArea
-    ) {
+            Vec2 p1, Vec2 p2, Vec2 p3, Matrix3x2f pose, @Nullable ScreenRectangle scissorArea) {
         var x0 = (int) Math.min(Math.min(p1.x, p2.x), p3.x);
         var x1 = (int) Math.ceil(Math.max(Math.max(p1.x, p2.x), p3.x));
         var y0 = (int) Math.min(Math.min(p1.y, p2.y), p3.y);

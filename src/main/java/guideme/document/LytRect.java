@@ -2,10 +2,8 @@ package guideme.document;
 
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.joml.Matrix3x2fc;
-import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
-import org.joml.Vector3f;
 
 public record LytRect(int x, int y, int width, int height) {
 

@@ -237,9 +237,7 @@ public class GuideScreen extends DocumentScreen implements GuideUiHost {
             paragraph.setStyle(TextStyle.builder().alignment(TextAlignment.RIGHT).build());
             var layoutContext = new LayoutContext(new MinecraftFontMetrics());
             paragraph.layout(layoutContext, documentRect.x(), documentRect.bottom(), documentRect.width());
-            var buffers = context.beginBatch();
-            paragraph.renderBatch(context, buffers);
-            context.endBatch(buffers);
+            paragraph.render(context);
         }
     }
 
@@ -289,9 +287,7 @@ public class GuideScreen extends DocumentScreen implements GuideUiHost {
     }
 
     private void renderTitle(LytRect documentRect, RenderContext context) {
-        var buffers = context.beginBatch();
-        pageTitle.renderBatch(context, buffers);
-        context.endBatch(buffers);
+        pageTitle.render(context);
         var separatorRect = new LytRect(
                 screenRect.x(),
                 documentRect.y() - 1,

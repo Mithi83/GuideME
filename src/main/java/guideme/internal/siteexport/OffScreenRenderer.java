@@ -8,7 +8,6 @@ import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.textures.GpuTextureView;
 import guideme.hooks.RenderToTextureHooks;
 import guideme.internal.util.Platform;
 import java.io.IOException;
@@ -22,7 +21,6 @@ import java.util.OptionalInt;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer;
 import net.minecraft.client.renderer.PerspectiveProjectionMatrixBuffer;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -59,7 +57,8 @@ public class OffScreenRenderer implements AutoCloseable {
         var colorTextureView = Objects.requireNonNull(fb.getColorTextureView(), "colorTexture");
         depthTexture = Objects.requireNonNull(fb.getDepthTexture(), "depthTexture");
         var depthTextureView = Objects.requireNonNull(fb.getDepthTextureView(), "depthTexture");
-        commandEncoder.createRenderPass(() -> "GuideME OffScreen", colorTextureView, OptionalInt.of(0), depthTextureView, OptionalDouble.of(1.0)).close();
+        commandEncoder.createRenderPass(() -> "GuideME OffScreen", colorTextureView, OptionalInt.of(0),
+                depthTextureView, OptionalDouble.of(1.0)).close();
     }
 
     @Override

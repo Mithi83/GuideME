@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
@@ -89,7 +90,10 @@ public final class InWorldAnnotationRenderer {
         for (var pass = 1; pass <= 2; pass++) {
             if (pass == 2) {
                 RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(
-                        Minecraft.getInstance().getMainRenderTarget().getDepthTexture(), 1.0);
+                        RenderSystem.outputDepthTextureOverride != null
+                                ? RenderSystem.outputDepthTextureOverride.texture()
+                                : Minecraft.getInstance().getMainRenderTarget().getDepthTexture(),
+                        1.0);
             }
 
             var renderType = RenderTypeHelper.getEntityRenderType(ChunkSectionLayer.TRANSLUCENT);
@@ -285,6 +289,7 @@ public final class InWorldAnnotationRenderer {
         consumer.addVertex(bottomLeft.x, bottomLeft.y, bottomLeft.z)
                 .setColor(color)
                 .setUv(u, v)
+                .setOverlay(OverlayTexture.NO_OVERLAY)
                 .setLight(LightTexture.FULL_BRIGHT)
                 .setNormal(faceNormal.x(), faceNormal.y(), faceNormal.z());
     }

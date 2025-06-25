@@ -16,6 +16,8 @@ import guideme.internal.search.GuideSearch;
 import guideme.internal.siteexport.SiteExportOnStartup;
 import guideme.internal.util.Blitter;
 import guideme.render.GuiAssets;
+import java.util.Objects;
+import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -50,9 +52,6 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Objects;
-import java.util.Set;
 
 @Mod(value = GuideME.MOD_ID, dist = Dist.CLIENT)
 public class GuideMEClient {
@@ -123,7 +122,7 @@ public class GuideMEClient {
     }
 
     private void registerPipRenderers(RegisterPictureInPictureRenderersEvent event) {
-        event.register(ScenePictureInPictureRenderer::new);
+        event.register(ScenePictureInPictureRenderer.State.class, ScenePictureInPictureRenderer::new);
     }
 
     private void registerItemModel(RegisterItemModelsEvent event) {

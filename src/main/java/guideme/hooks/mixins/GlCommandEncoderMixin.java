@@ -10,7 +10,6 @@ import guideme.hooks.RenderToTextureHooks;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
-
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 
