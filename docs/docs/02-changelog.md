@@ -3,6 +3,11 @@ import Video from '@site/src/components/Video';
 
 # Changelog
 
+## 21.5.9-beta (Minecraft 1.21.5)
+
+- Fix text in floating elements disappearing while scrolling.
+- Fix layout of game scenes still including the vertical toolbar even if it was hidden.
+
 ## 21.5.8-beta (Minecraft 1.21.5)
 
 - Add support for [templating annotations in game scenes](./30-authoring/game-scenes.md#block-annotation-templates). This allows you to apply annotations to specific blocks in the scene by type rather than position.
